@@ -1,0 +1,194 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8"/>
+  <title>クレカ利用履歴</title>
+  <style>
+    body { font-family: system-ui; max-width: 1100px; margin: 24px auto; padding: 12px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .error { background: #ffe5e5; border: 1px solid #ff9f9f; padding: 10px; margin: 10px 0; }
+  </style>
+</head>
+<body>
+<h1>クレカ利用履歴</h1>
+
+
+<h2>支払予定（当月〜2か月後）</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>支払予定月</th>
+      <th>支払合計額</th>
+      <th>当月未払い合計</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr th:each="s : ${summary}">
+      <!-- 支払予定月 -->
+      <td th:text="${s.month}"></td>
+
+      <!-- 予定合計（支払い済み含む） -->
+      <td style="text-align:right"
+          th:text="${#numbers.formatInteger(s.total, 0, 'COMMA')} + ' 円'">
+      </td>
+
+      <!-- 未払い合計（当月のみ表示） -->
+      <td style="text-align:right">
+        <span th:if="${s.month == currentMonth}"
+              th:text="${#numbers.formatInteger(s.unpaid, 0, 'COMMA')} + ' 円'">
+        </span>
+      </td>
+    </tr>
+  </tbody>
+
+</table>
+
+<hr/>
+
+
+<h2>新規登録</h2>
+
+<form th:action="@{/transactions}" th:object="${form}" method="post">
+
+  <div th:if="${#fields.hasErrors('*')}" class="error">
+    入力エラーがあります。赤い項目を確認してください。
+  </div>
+
+  <!-- 以下フォーム本体 -->
+
+  <div class="row">
+    <div class="field" style="min-width:240px;">
+      <label>購入商品</label>
+      <input th:field="*{itemName}" />
+      <div th:errors="*{itemName}"></div>
+    </div>
+
+    <div class="field" style="min-width:180px;">
+      <label>使用カード</label>
+      <select th:field="*{cardId}">
+        <option value="">選択してください</option>
+        <option th:each="c : ${cards}" th:value="${c.id}" th:text="${c.name}"></option>
+      </select>
+      <div th:errors="*{cardId}"></div>
+    </div>
+
+    <div class="field" style="min-width:140px;">
+      <label>金額</label>
+      <input type="number" min="0" th:field="*{amount}" />
+      <div th:errors="*{amount}"></div>
+    </div>
+
+    <div class="field" style="min-width:160px;">
+      <label>購入日（当日自動）</label>
+      <input type="date" th:field="*{purchaseDate}" />
+      <div th:errors="*{purchaseDate}"></div>
+    </div>
+
+    <div class="field" style="min-width:160px;">
+      <label>支払予定月</label>
+      <select th:field="*{billingMonth}">
+        <option value="">選択してください</option>
+        <option th:each="m : ${months}" th:value="${m}" th:text="${m}"></option>
+      </select>
+      <div th:errors="*{billingMonth}"></div>
+    </div>
+
+    <div class="field" style="min-width:160px;">
+      <label>支払月（支払済みの場合）</label>
+      <select th:field="*{paidMonth}">
+        <option value="">（未指定なら予定月）</option>
+        <option th:each="m : ${months}" th:value="${m}" th:text="${m}"></option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>支払</label>
+      <label><input type="checkbox" th:field="*{paid}" /> 支払済</label>
+    </div>
+
+    <div class="field">
+      <label>&nbsp;</label>
+      <button type="submit">追加</button>
+    </div>
+  </div>
+</form>
+
+<hr/>
+
+<form th:action="@{/transactions}" th:object="${search}" method="get">
+  <div>
+    <label>請求月</label>
+    <select th:field="*{billingMonth}">
+      <option value="">-- 全部 --</option>
+      <option th:each="m : ${months}" th:value="${m}" th:text="${m}"></option>
+    </select>
+
+    <label>カード</label>
+    <select th:field="*{cardId}">
+      <option value="">-- 全部 --</option>
+      <option th:each="c : ${cards}" th:value="${c.id}" th:text="${c.name}"></option>
+    </select>
+
+    <label>支払</label>
+    <select th:field="*{paid}">
+      <option value="">-- 全部 --</option>
+      <option th:value="true">支払済</option>
+      <option th:value="false">未払い</option>
+    </select>
+
+    <label>キーワード</label>
+    <input type="text" th:field="*{keyword}" placeholder="例: Amazon"/>
+
+    <button type="submit">検索</button>
+    <a th:href="@{/transactions}">クリア</a>
+  </div>
+</form>
+
+
+<h2>一覧</h2>
+<table>
+  <thead>
+  <tr>
+    <th>ID</th>
+    <th>購入商品</th>
+    <th>カード</th>
+    <th>金額</th>
+    <th>購入日</th>
+    <th>支払予定月</th>
+    <th>支払月</th>
+    <th>支払</th>
+    <th>操作</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr th:each="r : ${rows}">
+    <td th:text="${r.id}"></td>
+    <td th:text="${r.itemName}"></td>
+    <td th:text="${r.card.name}"></td>
+    <td style="text-align:right" th:text="${#numbers.formatInteger(r.amount, 0, 'COMMA')}"></td>
+    <td th:text="${r.purchaseDate}"></td>
+    <td th:text="${r.billingMonth}"></td>
+    <td th:text="${r.paidMonth} ?: ''"></td>
+    <td th:text="${r.paid} ? '済' : '未'"></td>
+    <td style="white-space:nowrap;">
+      <form th:action="@{|/transactions/${r.id}/toggle-paid|}" method="post" style="display:inline;">
+        <button type="submit" th:text="${r.paid} ? '未に戻す' : '済にする'"></button>
+      </form>
+      <form th:action="@{|/transactions/${r.id}/delete|}" method="post" style="display:inline;">
+        <button type="submit">削除</button>
+      </form>
+    </td>
+  </tr>
+  <tr th:if="${#lists.isEmpty(rows)}">
+    <td colspan="9" style="text-align:center;">データがありません</td>
+  </tr>
+  </tbody>
+</table>
+
+</body>
+</html>
