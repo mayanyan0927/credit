@@ -7,13 +7,13 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
-@Entity
+@Entity //DBと紐づく
 @Table(name = "cards")
 public class Card {
-  @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Id @GeneratedValue(strategy = GenerationType.IDENTITY) //ID自動採番
   private Long id;
 
-  @Column(nullable = false, unique = true)
+  @Column(nullable = false, unique = true) //nullなし　重複禁止
   private String name;
 
   public Card() {}

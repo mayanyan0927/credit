@@ -6,6 +6,8 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
 public class TransactionForm {
 
   @NotBlank
@@ -19,8 +21,14 @@ public class TransactionForm {
 
   // 当日をデフォルト
   @NotNull
-  private LocalDate purchaseDate = LocalDate.now();
+//  private LocalDate purchaseDate = LocalDate.now();
+  @DateTimeFormat(pattern = "yyyy-MM-dd") 
+  private LocalDate purchaseDate;
 
+
+
+
+  // 入力を受け付ける
   @NotBlank
   private String billingMonth; // yyyy-MM
 

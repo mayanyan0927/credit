@@ -16,33 +16,37 @@
 <h1>クレカ利用履歴</h1>
 
 
-<h2>支払予定（当月〜2か月後）</h2>
+<h2>支払予定（2か月先まで）</h2>
 
-<table>
+<table class="summary-table">
   <thead>
     <tr>
       <th>支払予定月</th>
       <th>支払合計額</th>
-      <th>当月未払い合計</th>
+      <th>当月予定未払額</th>
     </tr>
   </thead>
-
+  <style>
+	.summary-table {
+	  width: 500px;
+	  margin-bottom: 24px;
+	}
+  </style>
   <tbody>
     <tr th:each="s : ${summary}">
       <!-- 支払予定月 -->
       <td th:text="${s.month}"></td>
 
-      <!-- 予定合計（支払い済み含む） -->
+      <!-- 予定合計（支払済み含む） -->
       <td style="text-align:right"
           th:text="${#numbers.formatInteger(s.total, 0, 'COMMA')} + ' 円'">
       </td>
 
       <!-- 未払い合計（当月のみ表示） -->
-      <td style="text-align:right">
-        <span th:if="${s.month == currentMonth}"
-              th:text="${#numbers.formatInteger(s.unpaid, 0, 'COMMA')} + ' 円'">
-        </span>
-      </td>
+	  <td style="text-align:right"
+	      th:if="${s.month == currentMonth}"
+	      th:text="${#numbers.formatInteger(s.unpaid, 0, 'COMMA')} + ' 円'">
+	  </td>
     </tr>
   </tbody>
 
@@ -120,9 +124,11 @@
 
 <hr/>
 
+<h2>一覧</h2>
+
 <form th:action="@{/transactions}" th:object="${search}" method="get">
   <div>
-    <label>請求月</label>
+    <label>支払月</label>
     <select th:field="*{billingMonth}">
       <option value="">-- 全部 --</option>
       <option th:each="m : ${months}" th:value="${m}" th:text="${m}"></option>
@@ -150,11 +156,11 @@
 </form>
 
 
-<h2>一覧</h2>
+
+
 <table>
   <thead>
   <tr>
-    <th>ID</th>
     <th>購入商品</th>
     <th>カード</th>
     <th>金額</th>
@@ -167,7 +173,6 @@
   </thead>
   <tbody>
   <tr th:each="r : ${rows}">
-    <td th:text="${r.id}"></td>
     <td th:text="${r.itemName}"></td>
     <td th:text="${r.card.name}"></td>
     <td style="text-align:right" th:text="${#numbers.formatInteger(r.amount, 0, 'COMMA')}"></td>
@@ -175,20 +180,63 @@
     <td th:text="${r.billingMonth}"></td>
     <td th:text="${r.paidMonth} ?: ''"></td>
     <td th:text="${r.paid} ? '済' : '未'"></td>
-    <td style="white-space:nowrap;">
-      <form th:action="@{|/transactions/${r.id}/toggle-paid|}" method="post" style="display:inline;">
-        <button type="submit" th:text="${r.paid} ? '未に戻す' : '済にする'"></button>
-      </form>
-      <form th:action="@{|/transactions/${r.id}/delete|}" method="post" style="display:inline;">
-        <button type="submit">削除</button>
-      </form>
-    </td>
+
+			<td style="white-space:nowrap;">
+
+
+		  <form th:action="@{|/transactions/${r.id}/toggle-paid|}" method="post" style="display:inline;">
+		    <button type="submit" th:text="${r.paid} ? '未に戻す' : '済にする'"></button>
+		  </form>
+
+		  <form th:action="@{|/transactions/${r.id}/edit|}" method="get" style="display:inline;">
+		    <button type="submit">修正</button>
+		  </form>
+		  
+		  <form th:action="@{|/transactions/${r.id}/delete|}" method="post" style="display:inline;">
+		    <button type="submit" onclick="return confirm('本当に削除しますか？');">削除</button>
+		  </form>
+		</td>
   </tr>
   <tr th:if="${#lists.isEmpty(rows)}">
     <td colspan="9" style="text-align:center;">データがありません</td>
   </tr>
   </tbody>
 </table>
+
+<hr/>
+
+<h2>過去12か月の支払額</h2>
+<div style="max-width: 900px; margin-bottom: 24px;">
+  <canvas id="paidChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script th:inline="javascript">
+  const chartLabels = /*[[${chartLabels}]]*/ [];
+  const chartValues = /*[[${chartValues}]]*/ [];
+
+  const ctx = document.getElementById('paidChart');
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: chartLabels,
+      datasets: [{
+        label: '支払額',
+        data: chartValues,
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+</script>
 
 </body>
 </html>

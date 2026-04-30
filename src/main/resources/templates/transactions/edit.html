@@ -1,0 +1,81 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8"/>
+  <title>利用履歴 修正</title>
+  <style>
+    body { font-family: system-ui; max-width: 900px; margin: 24px auto; padding: 12px; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
+    .field { display: flex; flex-direction: column; gap: 4px; min-width: 180px; }
+    .error { background: #ffe5e5; border: 1px solid #ff9f9f; padding: 10px; margin: 10px 0; }
+  </style>
+</head>
+<body>
+
+<h1>利用履歴 修正</h1>
+
+<form th:action="@{|/transactions/${transactionId}/edit|}" th:object="${form}" method="post">
+
+  <div th:if="${#fields.hasErrors('*')}" class="error">
+    入力エラーがあります。確認してください。
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <label>購入商品</label>
+      <input th:field="*{itemName}" />
+      <div th:errors="*{itemName}"></div>
+    </div>
+
+    <div class="field">
+      <label>使用カード</label>
+      <select th:field="*{cardId}">
+        <option value="">選択してください</option>
+        <option th:each="c : ${cards}" th:value="${c.id}" th:text="${c.name}"></option>
+      </select>
+      <div th:errors="*{cardId}"></div>
+    </div>
+
+    <div class="field">
+      <label>金額</label>
+      <input type="number" min="0" th:field="*{amount}" />
+      <div th:errors="*{amount}"></div>
+    </div>
+
+    <div class="field">
+      <label>購入日</label>
+      <input type="date" th:field="*{purchaseDate}" />
+      <div th:errors="*{purchaseDate}"></div>
+    </div>
+
+    <div class="field">
+      <label>支払予定月</label>
+      <select th:field="*{billingMonth}">
+        <option value="">選択してください</option>
+        <option th:each="m : ${months}" th:value="${m}" th:text="${m}"></option>
+      </select>
+      <div th:errors="*{billingMonth}"></div>
+    </div>
+
+    <div class="field">
+      <label>支払月</label>
+      <select th:field="*{paidMonth}">
+        <option value="">（未指定なら予定月）</option>
+        <option th:each="m : ${months}" th:value="${m}" th:text="${m}"></option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label>支払</label>
+      <label><input type="checkbox" th:field="*{paid}" /> 支払済</label>
+    </div>
+  </div>
+
+  <div style="margin-top: 16px;">
+    <button type="submit">更新</button>
+    <a th:href="@{/transactions}">戻る</a>
+  </div>
+</form>
+
+</body>
+</html>

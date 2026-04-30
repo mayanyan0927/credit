@@ -2,15 +2,15 @@ package com.example.ccledger.repository;
 
 import java.util.List;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor; // 追加
+import org.springframework.data.jpa.repository.JpaRepository; //save findall findById delete
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor; // findAll(Specification spec)
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import com.example.ccledger.domain.Transaction;
 
 public interface TransactionRepository
-    extends JpaRepository<Transaction, Long>, JpaSpecificationExecutor<Transaction> { // ここが重要
+    extends JpaRepository<Transaction, Long>, JpaSpecificationExecutor<Transaction> { 
 
     interface MonthlySummary {
         String getBillingMonth();
@@ -32,4 +32,25 @@ public interface TransactionRepository
         @Param("startMonth") String startMonth,
         @Param("endMonth") String endMonth
     );
+
+
+interface PaidMonthlySummary {
+	  String getPaidMonth();
+	  Long getTotalAmount();
+	}
+
+	@Query(value = """
+	    SELECT
+	      paid_month AS paidMonth,
+	      COALESCE(SUM(amount), 0) AS totalAmount
+	    FROM transactions
+	    WHERE paid = TRUE
+	      AND paid_month BETWEEN :startMonth AND :endMonth
+	    GROUP BY paid_month
+	    ORDER BY paid_month
+	    """, nativeQuery = true)
+	List<PaidMonthlySummary> findPaidMonthlySummary(
+	    @Param("startMonth") String startMonth,
+	    @Param("endMonth") String endMonth
+	);
 }

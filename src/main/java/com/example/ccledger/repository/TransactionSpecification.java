@@ -4,7 +4,7 @@ import org.springframework.data.jpa.domain.Specification;
 
 import com.example.ccledger.domain.Transaction;
 
-public class TransactionSpecification {
+public class TransactionSpecification {//SQLを作成
 
   public static Specification<Transaction> billingMonthEquals(String billingMonth) {
     return (root, query, cb) -> {

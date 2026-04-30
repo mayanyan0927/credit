@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 import com.example.ccledger.domain.Card;
 import com.example.ccledger.repository.CardRepository;
 
-@Component
+@Component //起動時に動く
 public class DataLoader implements CommandLineRunner {
 
   private final CardRepository cardRepo;
@@ -21,10 +21,10 @@ public class DataLoader implements CommandLineRunner {
   public void run(String... args) {
     if (cardRepo.count() == 0) {
       cardRepo.saveAll(List.of(
-        new Card("楽天カード"),
+        new Card("Amazonカード"),
         new Card("三井住友カード"),
         new Card("JCB"),
-        new Card("AMEX")
+        new Card("PayPay")
       ));
     }
   }
